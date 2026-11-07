@@ -16,6 +16,15 @@
         <exec.mainClass>com.ues.hotel.Main</exec.mainClass>
     </properties>
 
+    <dependencies>
+        <!-- Driver Sync de MongoDB para Java -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>5.2.1</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
