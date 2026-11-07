@@ -1,5 +1,7 @@
 package com.ues.hotel.seguridad;
 
+import java.util.Optional;
+
 public class ServicioAutenticacion {
     private final UsuarioRepositorio repositorio;
 
