@@ -1,0 +1,10 @@
+# NetBeans / Java
+/build/
+/dist/
+/nbproject/private/
+/target/
+*.class
+*.log
+*.jar
+# Credenciales reales (NUNCA subir)
+config.properties
