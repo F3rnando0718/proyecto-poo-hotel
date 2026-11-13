@@ -6,7 +6,7 @@ public class Usuario{
     private String passwordHash;
     private boolean activo;
     
-    public Usuario(String usuario, String nombreCompleto, String paswordHash, boolean activo){
+    public Usuario(String usuario, String nombreCompleto, String passwordHash, boolean activo){
         this.usuario = usuario;
         this.nombreCompleto = nombreCompleto;
         this.passwordHash = passwordHash;
