@@ -1,15 +1,12 @@
+
 package com.ues.hotel.modelo;
 
+import com.ues.hotel.servicio.Validador;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 /**
  * Reserva de una habitación por un cliente en un rango de fechas.
- * Encapsula las reglas propias de una reserva: noches, costo y solapamiento.
- *
- * @author Genesis Abigail García Flores
- * @author Fernando Josué López Recinos
- * @author Ernesto Isaí Figueroa Moran
  */
 public class Reserva {
 
@@ -18,29 +15,65 @@ public class Reserva {
     private final int id;
     private final Cliente cliente;
     private final Habitacion habitacion;
+    private final int cantidadHuespedes;
     private final LocalDate entrada;
     private final LocalDate salida;
     private EstadoReserva estado;
 
-    public Reserva(int id, Cliente cliente, Habitacion habitacion, LocalDate entrada, LocalDate salida) {
-        this(id, cliente, habitacion, entrada, salida, EstadoReserva.ACTIVA);
+    public Reserva(int id, Cliente cliente, Habitacion habitacion,
+            LocalDate entrada, LocalDate salida) {
+        this(id, cliente, habitacion, 1, entrada, salida,
+                EstadoReserva.ACTIVA);
     }
 
-    /** Constructor usado al restaurar una reserva guardada (puede estar cancelada). */
-    public Reserva(int id, Cliente cliente, Habitacion habitacion, LocalDate entrada, LocalDate salida,
-            EstadoReserva estado) {
-        if (cliente == null || habitacion == null || entrada == null || salida == null) {
-            throw new IllegalArgumentException("Todos los datos de la reserva son obligatorios.");
+    public Reserva(int id, Cliente cliente, Habitacion habitacion,
+            LocalDate entrada, LocalDate salida, EstadoReserva estado) {
+        this(id, cliente, habitacion, 1, entrada, salida, estado);
+    }
+
+    public Reserva(int id, Cliente cliente, Habitacion habitacion,
+            int cantidadHuespedes, LocalDate entrada, LocalDate salida) {
+        this(id, cliente, habitacion, cantidadHuespedes,
+                entrada, salida, EstadoReserva.ACTIVA);
+    }
+
+    /**
+     * Constructor completo para crear o restaurar una reserva.
+     */
+    public Reserva(int id, Cliente cliente, Habitacion habitacion,
+            int cantidadHuespedes, LocalDate entrada,
+            LocalDate salida, EstadoReserva estado) {
+
+        this.id = Validador.validarNumeroPositivo(
+                id, "ID de reserva");
+
+        if (cliente == null || habitacion == null
+                || entrada == null || salida == null) {
+            throw new IllegalArgumentException(
+                    "Todos los datos de la reserva son obligatorios.");
         }
+
         if (!salida.isAfter(entrada)) {
-            throw new IllegalArgumentException("La fecha de salida debe ser posterior a la de entrada.");
+            throw new IllegalArgumentException(
+                    "La fecha de salida debe ser posterior a la de entrada.");
         }
-        this.id = id;
+
+        Validador.validarNumeroPositivo(
+                cantidadHuespedes, "cantidad de huéspedes");
+
+        if (cantidadHuespedes > habitacion.getCapacidad()) {
+            throw new IllegalArgumentException(
+                    "La cantidad de huéspedes supera la capacidad "
+                    + "de la habitación.");
+        }
+
         this.cliente = cliente;
         this.habitacion = habitacion;
+        this.cantidadHuespedes = cantidadHuespedes;
         this.entrada = entrada;
         this.salida = salida;
-        this.estado = estado == null ? EstadoReserva.ACTIVA : estado;
+        this.estado = estado == null
+                ? EstadoReserva.ACTIVA : estado;
     }
 
     public int getId() {
@@ -53,6 +86,10 @@ public class Reserva {
 
     public Habitacion getHabitacion() {
         return habitacion;
+    }
+
+    public int getCantidadHuespedes() {
+        return cantidadHuespedes;
     }
 
     public LocalDate getEntrada() {
@@ -76,7 +113,8 @@ public class Reserva {
     }
 
     public double calcularSubtotal() {
-        return redondear(getNoches() * habitacion.getTarifaNoche());
+        return redondear(
+                getNoches() * habitacion.getTarifaNoche());
     }
 
     public double calcularIva() {
@@ -87,20 +125,27 @@ public class Reserva {
         return redondear(calcularSubtotal() + calcularIva());
     }
 
-    /** Marca la reserva como cancelada. */
     public void cancelar() {
         if (!estaActiva()) {
-            throw new IllegalStateException("La reserva #" + id + " ya estaba cancelada.");
+            throw new IllegalStateException(
+                    "La reserva #" + id + " ya estaba cancelada.");
         }
+
         estado = EstadoReserva.CANCELADA;
     }
 
-    /**
-     * Indica si esta reserva (activa) ocupa la habitación en el rango dado.
-     * El día de salida no cuenta como ocupado: otro huésped puede entrar ese día.
-     */
-    public boolean seSolapaCon(LocalDate otraEntrada, LocalDate otraSalida) {
-        return estaActiva() && otraEntrada.isBefore(salida) && otraSalida.isAfter(entrada);
+    public boolean seSolapaCon(
+            LocalDate otraEntrada, LocalDate otraSalida) {
+
+        if (otraEntrada == null || otraSalida == null
+                || !otraSalida.isAfter(otraEntrada)) {
+            throw new IllegalArgumentException(
+                    "El rango de fechas proporcionado no es válido.");
+        }
+
+        return estaActiva()
+                && otraEntrada.isBefore(salida)
+                && otraSalida.isAfter(entrada);
     }
 
     private static double redondear(double valor) {
@@ -109,6 +154,7 @@ public class Reserva {
 
     @Override
     public String toString() {
-        return "Reserva #" + id + " - " + cliente.getNombre() + " - " + habitacion;
+        return "Reserva #" + id + " - "
+                + cliente.getNombre() + " - " + habitacion;
     }
 }

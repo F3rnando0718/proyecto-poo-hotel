@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import com.ues.hotel.modelo.EstadoHabitacion;
 
 /**
  * Clase de servicio que agrupa los datos del hotel y las operaciones del caso de estudio:
@@ -29,8 +30,13 @@ public class Hotel {
     private RepositorioHotel repositorio;
 
     public Hotel(String nombre) {
-        this.nombre = nombre;
+    if (nombre == null || nombre.isBlank()) {
+        throw new IllegalArgumentException(
+                "El nombre del hotel es obligatorio.");
     }
+
+    this.nombre = nombre.trim();
+}
 
     public String getNombre() {
         return nombre;
@@ -50,6 +56,9 @@ public class Hotel {
     /** Reemplaza los datos del hotel por los restaurados desde el repositorio. */
     public void restaurarDatos(List<Cliente> listaClientes, List<Habitacion> listaHabitaciones,
             List<Reserva> listaReservas) {
+        if (listaClientes == null || listaHabitaciones == null || listaReservas == null) {
+            throw new IllegalArgumentException("Las listas de datos no pueden ser nulas.");
+        }
         clientes.clear();
         habitaciones.clear();
         reservas.clear();
@@ -93,12 +102,25 @@ public class Hotel {
     public List<Cliente> getClientes() {
         return Collections.unmodifiableList(clientes);
     }
-
+    
+    public void eliminarCliente(int idCliente) throws HotelException{
+        
+        Cliente cliente = buscarCliente(idCliente);
+        
+        for (Reserva reserva : reservas){
+            if (reserva.getCliente().getId() == idCliente){
+            throw new HotelException("No se puede eliminar el cleinte porque tiene reservas registradas.");
+            }
+        }
+        
+        clientes.remove(cliente);
+        persistir();
+    }
     // ----------------------------------------------------------- Habitaciones
 
     public Habitacion registrarHabitacion(int numero, TipoHabitacion tipo) throws HotelException {
-        if (tipo == null) {
-            throw new HotelException("Debe seleccionar el tipo de habitación.");
+        if (numero <= 0) {
+            throw new HotelException("El número de habitación debe ser mayor que cero.");
         }
         for (Habitacion h : habitaciones) {
             if (h.getNumero() == numero) {
@@ -117,17 +139,97 @@ public class Hotel {
     }
 
     public Habitacion buscarHabitacion(int numero) throws HotelException {
-        for (Habitacion h : habitaciones) {
-            if (h.getNumero() == numero) {
-                return h;
-            }
+    for (Habitacion h : habitaciones) {
+        if (h.getNumero() == numero) {
+            return h;
         }
-        throw new HotelException("No existe la habitación " + numero + ".");
     }
+    throw new HotelException("No existe la habitación " + numero + ".");
+}
+
+/**
+ * Busca habitaciones según su tipo.
+ */
+public List<Habitacion> buscarHabitacionesPorTipo(
+        TipoHabitacion tipo) throws HotelException {
+
+    if (tipo == null) {
+        throw new HotelException(
+                "Debe seleccionar un tipo de habitación.");
+    }
+
+    List<Habitacion> resultado = new ArrayList<>();
+
+    for (Habitacion habitacion : habitaciones) {
+        if (habitacion.getTipo() == tipo) {
+            resultado.add(habitacion);
+        }
+    }
+
+    return Collections.unmodifiableList(resultado);
+}
+    
+    
 
     public List<Habitacion> getHabitaciones() {
         return Collections.unmodifiableList(habitaciones);
     }
+    
+/**
+ * Modifica la capacidad y la tarifa de una habitación.
+ */
+public void modificarHabitacion(int numero, int capacidad,
+        double tarifaNoche) throws HotelException {
+
+    Habitacion habitacion = buscarHabitacion(numero);
+
+    try {
+        // Validamos ambos valores antes de modificarlos.
+        Validador.validarNumeroPositivo(capacidad, "capacidad");
+        Validador.validarPrecio(tarifaNoche);
+
+        habitacion.setCapacidad(capacidad);
+        habitacion.setTarifaNoche(tarifaNoche);
+
+    } catch (IllegalArgumentException e) {
+        throw new HotelException(e.getMessage());
+    }
+
+    persistir();
+}
+
+/**
+ * Cambia el estado de una habitación.
+ */
+public void cambiarEstadoHabitacion(int numero,
+        EstadoHabitacion estado) throws HotelException {
+
+    Habitacion habitacion = buscarHabitacion(numero);
+
+    if (estado == null) {
+        throw new HotelException(
+                "Debe seleccionar un estado para la habitación.");
+    }
+
+    habitacion.setEstado(estado);
+    persistir();
+}
+
+    
+    public void eliminarHabitacion(int numero) throws HotelException {
+
+    Habitacion habitacion = buscarHabitacion(numero);
+
+    for (Reserva reserva : reservas) {
+        if (reserva.getHabitacion().getNumero() == numero) {
+            throw new HotelException(
+                    "No se puede eliminar la habitación porque tiene reservas registradas.");
+        }
+    }
+
+    habitaciones.remove(habitacion);
+    persistir();
+}
 
     // ------------------------------------------------------------ Disponibilidad
 
@@ -143,34 +245,94 @@ public class Hotel {
         return disponibles;
     }
 
-    private boolean estaDisponible(Habitacion habitacion, LocalDate entrada, LocalDate salida) {
-        for (Reserva r : reservas) {
-            if (r.getHabitacion().equals(habitacion) && r.seSolapaCon(entrada, salida)) {
-                return false;
-            }
-        }
-        return true;
+    
+private boolean estaDisponible(Habitacion habitacion,
+        LocalDate entrada, LocalDate salida) {
+
+    if (habitacion == null || entrada == null || salida == null
+            || !salida.isAfter(entrada)) {
+        return false;
     }
+
+    if (habitacion.getEstado() != EstadoHabitacion.DISPONIBLE) {
+    return false;
+    
+    }
+
+    for (Reserva r : reservas) {
+        if (r.getHabitacion().getNumero() == habitacion.getNumero()
+                && r.seSolapaCon(entrada, salida)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
     // ------------------------------------------------------------------ Reservas
 
-    public Reserva realizarReserva(int idCliente, int numeroHabitacion, LocalDate entrada, LocalDate salida)
-            throws HotelException {
-        validarRango(entrada, salida);
-        if (entrada.isBefore(LocalDate.now())) {
-            throw new HotelException("La fecha de entrada no puede ser anterior a hoy.");
-        }
-        Cliente cliente = buscarCliente(idCliente);
-        Habitacion habitacion = buscarHabitacion(numeroHabitacion);
-        if (!estaDisponible(habitacion, entrada, salida)) {
-            throw new HotelException("La habitación " + numeroHabitacion
-                    + " no está disponible en las fechas solicitadas.");
-        }
-        Reserva reserva = new Reserva(siguienteIdReserva++, cliente, habitacion, entrada, salida);
-        reservas.add(reserva);
-        persistir();
-        return reserva;
+    
+/**
+ * Mantiene compatibilidad con las llamadas anteriores.
+ */
+public Reserva realizarReserva(int idCliente, int numeroHabitacion,
+        LocalDate entrada, LocalDate salida) throws HotelException {
+
+    return realizarReserva(idCliente, numeroHabitacion, 1,
+            entrada, salida);
+}
+
+/**
+ * Registra una reserva validando la cantidad de huéspedes.
+ */
+public Reserva realizarReserva(int idCliente, int numeroHabitacion,
+        int cantidadHuespedes, LocalDate entrada, LocalDate salida)
+        throws HotelException {
+
+    validarRango(entrada, salida);
+
+    if (entrada.isBefore(LocalDate.now())) {
+        throw new HotelException(
+                "La fecha de entrada no puede ser anterior a hoy.");
     }
+
+    Cliente cliente = buscarCliente(idCliente);
+    Habitacion habitacion = buscarHabitacion(numeroHabitacion);
+
+    if (cantidadHuespedes <= 0) {
+        throw new HotelException(
+                "La cantidad de huéspedes debe ser mayor que cero.");
+    }
+
+    if (cantidadHuespedes > habitacion.getCapacidad()) {
+        throw new HotelException(
+                "La habitación admite solamente "
+                + habitacion.getCapacidad() + " huéspedes.");
+    }
+
+    if (!estaDisponible(habitacion, entrada, salida)) {
+        throw new HotelException(
+                "La habitación " + numeroHabitacion
+                + " no está disponible en las fechas solicitadas.");
+    }
+
+    Reserva reserva;
+
+    try {
+        reserva = new Reserva(siguienteIdReserva, cliente,
+                habitacion, cantidadHuespedes, entrada, salida);
+    } catch (IllegalArgumentException e) {
+        throw new HotelException(e.getMessage());
+    }
+
+    siguienteIdReserva++;
+    reservas.add(reserva);
+    persistir();
+
+    return reserva;
+}
+
 
     public void cancelarReserva(int idReserva) throws HotelException {
         Reserva reserva = buscarReserva(idReserva);
@@ -192,22 +354,24 @@ public class Hotel {
 
     public List<Reserva> consultarReservas(boolean soloActivas) {
         List<Reserva> resultado = new ArrayList<>();
+        
         for (Reserva r : reservas) {
             if (!soloActivas || r.estaActiva()) {
-                resultado.add(r);
+            resultado.add(r);
             }
         }
-        return resultado;
+        return Collections.unmodifiableList(resultado);
     }
 
     public List<Reserva> consultarReservasDeCliente(int idCliente) {
         List<Reserva> resultado = new ArrayList<>();
+        
         for (Reserva r : reservas) {
             if (r.getCliente().getId() == idCliente) {
                 resultado.add(r);
             }
         }
-        return resultado;
+        return Collections.unmodifiableList(resultado);
     }
 
     public double calcularCosto(int idReserva) throws HotelException {
@@ -216,12 +380,18 @@ public class Hotel {
 
     // ---------------------------------------------------------------- Utilidades
 
-    private void validarRango(LocalDate entrada, LocalDate salida) throws HotelException {
+    private void validarRango(LocalDate entrada, LocalDate salida)
+        throws HotelException {
         if (entrada == null || salida == null) {
             throw new HotelException("Debe indicar las fechas de entrada y salida.");
         }
+        
         if (!salida.isAfter(entrada)) {
             throw new HotelException("La fecha de salida debe ser posterior a la fecha de entrada.");
+        }
+        
+        if (entrada.isBefore(LocalDate.now())) {
+            throw new HotelException("La fecha de entrada no puede ser anterior a hoy.");
         }
     }
 

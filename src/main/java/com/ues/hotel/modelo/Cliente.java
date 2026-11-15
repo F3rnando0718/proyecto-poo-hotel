@@ -1,7 +1,6 @@
 package com.ues.hotel.modelo;
 
-import java.util.regex.Pattern;
-
+import com.ues.hotel.servicio.Validador;
 /**
  * Huésped que realiza reservas en el hotel. Hereda de {@link Persona}.
  *
@@ -11,16 +10,13 @@ import java.util.regex.Pattern;
  */
 public class Cliente extends Persona {
 
-    private static final Pattern FORMATO_DUI = Pattern.compile("\\d{8}-\\d");
-
     private final String dui;
 
-    public Cliente(int id, String nombre, String dui, String telefono, String correo) {
+    public Cliente(int id, String nombre, String dui,
+                   String telefono, String correo) {
+
         super(id, nombre, telefono, correo);
-        if (dui == null || !FORMATO_DUI.matcher(dui.trim()).matches()) {
-            throw new IllegalArgumentException("El DUI debe tener el formato 00000000-0.");
-        }
-        this.dui = dui.trim();
+        this.dui = Validador.validarDui(dui);
     }
 
     public String getDui() {
