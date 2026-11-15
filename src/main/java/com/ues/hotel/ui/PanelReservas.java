@@ -14,6 +14,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.awt.Color;
+import java.awt.Font;
+import javax.swing.JLabel;
+
 
 /**
  * Consulta de reservas, cancelación y cálculo del costo.
@@ -25,13 +29,15 @@ import javax.swing.table.DefaultTableModel;
 public class PanelReservas extends JPanel implements Actualizable {
 
     private static final long serialVersionUID = 1L;
-
     private final Hotel hotel;
     private final Runnable alCambiar;
-    private final JCheckBox chkSoloActivas = new JCheckBox("Solo reservas activas");
+    private final JCheckBox chkSoloActivas = new JCheckBox("SOLO RESERVAS ACTIVAS");
     private final DefaultTableModel modelo =
             Ui.modelo("ID", "Cliente", "Habitación", "Entrada", "Salida", "Noches", "Estado", "Total");
     private final JTable tabla = Ui.tabla(modelo);
+    private final Color Azul = new Color(23, 43, 77);
+    private final Color Gold = new Color(198, 161, 91);
+    private final Color Crema = new Color(244, 241, 234);
     private final List<Reserva> mostradas = new ArrayList<>();
 
     public PanelReservas(Hotel hotel, Runnable alCambiar) {
@@ -39,19 +45,63 @@ public class PanelReservas extends JPanel implements Actualizable {
         this.alCambiar = alCambiar;
         setLayout(new BorderLayout(8, 8));
         setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        setBackground(Crema);
 
+// Encabezado del panel
+JPanel encabezado = new JPanel(new BorderLayout());
+encabezado.setBackground(Azul);
+encabezado.setBorder(new EmptyBorder(15, 20, 15, 20));
+
+        JLabel titulo = new JLabel("GRAND HOTEL");
+        titulo.setFont(new Font("Serif", Font.BOLD, 24));
+        titulo.setForeground(Color.WHITE);
+
+        JLabel subtitulo = new JLabel("Administración de reservas");
+        subtitulo.setFont(new Font("Arial", Font.PLAIN, 12));
+        subtitulo.setForeground(Color.WHITE);
+
+        JPanel textos = new JPanel(new java.awt.GridLayout(2, 1));
+        textos.setBackground(Azul);
+        textos.add(titulo);
+        textos.add(subtitulo);
+
+        encabezado.add(textos, BorderLayout.CENTER);
+
+        
+        JPanel contenido = new JPanel(new BorderLayout(8, 8));
+        contenido.setBackground(Crema);
         JPanel acciones = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        acciones.setBackground(Color.WHITE);
+        acciones.setBorder(new EmptyBorder(15, 15, 15, 15));
+        chkSoloActivas.setForeground(Azul);
+        chkSoloActivas.setFont(new Font("Arial", Font.BOLD, 13));
+        chkSoloActivas.setBackground(Color.WHITE);
         chkSoloActivas.addActionListener(e -> actualizar());
         acciones.add(chkSoloActivas);
-        JButton btnCosto = new JButton("Ver costo");
+        JButton btnCosto = new JButton("VER COSTO");
+        btnCosto.setBackground(Azul);
+        btnCosto.setForeground(Color.WHITE);
+        btnCosto.setFont(new Font("Arial", Font.BOLD, 12));
+        btnCosto.setFocusPainted(false);
+        btnCosto.setBorderPainted(false);
         btnCosto.addActionListener(e -> verCosto());
         acciones.add(btnCosto);
-        JButton btnCancelar = new JButton("Cancelar reserva");
+
+        JButton btnCancelar = new JButton("CANCELAR RESERVA");
+        btnCancelar.setBackground(Gold);
+        btnCancelar.setForeground(Color.WHITE);     
+        btnCancelar.setFont(new Font("Arial", Font.BOLD, 12));
+        btnCancelar.setFocusPainted(false);
+        btnCancelar.setBorderPainted(false);
         btnCancelar.addActionListener(e -> cancelar());
         acciones.add(btnCancelar);
 
-        add(acciones, BorderLayout.NORTH);
-        add(new JScrollPane(tabla), BorderLayout.CENTER);
+        contenido.add(acciones, BorderLayout.NORTH);
+        contenido.add(new JScrollPane(tabla), BorderLayout.CENTER);
+
+        add(encabezado, BorderLayout.NORTH);
+        add(contenido, BorderLayout.CENTER);
         actualizar();
     }
 
