@@ -1,5 +1,6 @@
 package com.ues.hotel.modelo;
 
+import com.ues.hotel.servicio.Validador;
 /**
  * Clase abstracta que representa a una persona del sistema.
  * Aplica ABSTRACCIÓN, ENCAPSULAMIENTO (atributos privados) y sirve de base
@@ -17,13 +18,16 @@ public abstract class Persona {
     private final String correo;
 
     protected Persona(int id, String nombre, String telefono, String correo) {
-        if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException("El nombre es obligatorio.");
+        this.id = Validador.validarNumeroPositivo(id, "ID");
+        this.nombre = Validador.validarNombre(nombre);
+
+        if (telefono == null || telefono.isBlank()) {
+            this.telefono = "";
+        } else {
+            this.telefono = Validador.validarTelefono(telefono);
         }
-        this.id = id;
-        this.nombre = nombre.trim();
-        this.telefono = telefono == null ? "" : telefono.trim();
-        this.correo = correo == null ? "" : correo.trim();
+
+        this.correo = Validador.validarCorreo(correo);
     }
 
     public int getId() {
