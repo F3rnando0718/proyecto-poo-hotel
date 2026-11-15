@@ -1,4 +1,3 @@
-
 package com.ues.hotel.ui;
 
 /**
@@ -11,6 +10,8 @@ package com.ues.hotel.ui;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import com.ues.hotel.seguridad.ServicioAutenticacion;
+import com.ues.hotel.servicio.Hotel;
 
 
 
@@ -23,9 +24,14 @@ public class LoginFrame extends JFrame {
     private final Color Azul = new Color (23, 43, 77);
     private final Color Gold = new Color (198, 161, 91);
     private final Color Crema  = new Color (244, 241, 234);
+    private ServicioAutenticacion autenticacion;
+    private Hotel hotel;
+   
+   
+    public LoginFrame(ServicioAutenticacion autenticacion, Hotel hotel){
     
-    public LoginFrame(){
-    
+        this.autenticacion= autenticacion;
+        this.hotel= hotel;
     setTitle ("Grand Hotel  -  Inicio de sesión");
     setSize (500,580);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -109,9 +115,9 @@ public class LoginFrame extends JFrame {
         btnIniciarSesion.setPreferredSize(new Dimension(290, 42));
     
     
-    tarjeta.add(btnIniciarSesion);
+    tarjeta.add(btnIniciarSesion);  
+    btnIniciarSesion.addActionListener(e -> iniciarSesion());
     tarjeta.add(Box.createVerticalStrut(22));
-    
     
     JLabel pie = new JLabel("Tu comodidad es nuestra prioridad");
     pie.setFont(new Font("Arial", Font.ITALIC, 11));
@@ -123,21 +129,63 @@ public class LoginFrame extends JFrame {
     add(fondo);
     }
     
-    private void estilizarEtiqueta(JLabel etiqueta) {
-        etiqueta.setFont(new Font("Arial", Font.BOLD, 13));
-        etiqueta.setForeground(Azul);
-        etiqueta.setAlignmentX(Component.LEFT_ALIGNMENT);
+    private void iniciarSesion() {
+
+    String usuario = txtUsuario.getText().trim();
+    String contrasena = new String(txtContrasena.getPassword());
+
+    if (usuario.isEmpty() || contrasena.isEmpty()) {
+        JOptionPane.showMessageDialog(
+                this,
+                "Por favor, complete todos los campos."
+        );
+        return;
     }
-     private void estilizarCampo(JTextField campo) {
-        campo.setFont(new Font("Arial", Font.PLAIN, 14));
-        campo.setMaximumSize(new Dimension(290, 38));
-        campo.setPreferredSize(new Dimension(290, 38));
-        campo.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 210, 210)),
-                new EmptyBorder(5, 10, 5, 10)
-        ));
+
+    boolean correcto = autenticacion.autenticar(usuario, contrasena);
+
+    if (correcto) {
+        JOptionPane.showMessageDialog(this, "¡Bienvenido al sistema!");
+
+        VentanaPrincipal ventana = new VentanaPrincipal(hotel);
+        ventana.setVisible(true);
+        dispose();
+
+    } else {
+        JOptionPane.showMessageDialog(
+                this,
+                "Usuario o contraseña incorrectos.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+
+        txtContrasena.setText("");
     }
-    }
+}
+
+private void estilizarEtiqueta(JLabel etiqueta) {
+    etiqueta.setFont(new Font("Arial", Font.BOLD, 13));
+    etiqueta.setForeground(Azul);
+    etiqueta.setAlignmentX(Component.LEFT_ALIGNMENT);
+}
+
+private void estilizarCampo(JTextField campo) {
+    campo.setFont(new Font("Arial", Font.PLAIN, 14));
+    campo.setMaximumSize(new Dimension(290, 38));
+    campo.setPreferredSize(new Dimension(290, 38));
+    campo.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(210, 210, 210)),
+            new EmptyBorder(5, 10, 5, 10)
+    ));
+}
+
+}
+
+
+
+
+     
+    
 
 
     
