@@ -164,9 +164,15 @@ public class PanelReservar extends JPanel implements Actualizable {
             if (cliente == null) {
                 throw new HotelException("Debe registrar al menos un cliente antes de reservar.");
             }
+             if (!hayBusqueda) {
+            throw new HotelException("Primero consulte la disponibilidad.");
+}
+
+
+        Habitacion habitacion = mostradas.get(fila);
             LocalDate entrada = Ui.leerFecha(txtEntrada.getText(), "entrada");
             LocalDate salida = Ui.leerFecha(txtSalida.getText(), "salida");
-            Habitacion habitacion = mostradas.get(fila);
+           
             Reserva reserva = hotel.realizarReserva(cliente.getId(), habitacion.getNumero(), entrada, salida);
             Ui.info(this, "Reserva #" + reserva.getId() + " creada para " + cliente.getNombre() + ".\n"
                     + habitacion + " | " + reserva.getNoches() + " noche(s)\n"
