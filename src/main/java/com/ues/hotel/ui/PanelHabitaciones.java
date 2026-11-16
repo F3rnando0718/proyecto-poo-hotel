@@ -109,9 +109,11 @@ public class PanelHabitaciones extends JPanel implements Actualizable {
             } catch (NumberFormatException ex) {
                 throw new HotelException("El número de habitación debe ser un entero.");
             }
-            hotel.registrarHabitacion(numero, (TipoHabitacion) cmbTipo.getSelectedItem());
-            txtNumero.setText("");
-            alCambiar.run();
+        hotel.registrarHabitacion(numero, (TipoHabitacion) cmbTipo.getSelectedItem());
+        txtNumero.setText("");
+        alCambiar.run();
+
+Ui.info(this, "Habitación registrada correctamente.");
         } catch (HotelException ex) {
             Ui.error(this, ex.getMessage());
         }
