@@ -16,7 +16,8 @@ import com.ues.hotel.persistencia.ConexionMongo;
 import com.ues.hotel.persistencia.UsuarioRepositorioMongo;
 import com.ues.hotel.seguridad.ServicioAutenticacion;
 import com.ues.hotel.ui.LoginFrame;
-
+import com.ues.hotel.servicio.RepositorioHotel;
+import com.ues.hotel.persistencia.RepositorioHotelMongo;
 
 /**
  * Punto de entrada de la aplicación de escritorio.
@@ -66,20 +67,22 @@ public class Main {
                 new ServicioAutenticacion(repositorioUsuarios);
 
         // Cargar los datos del hotel
-        Hotel hotel = abrirHotel(new RepositorioArchivo(ARCHIVO_DATOS));
-
+Hotel hotel = abrirHotel(new RepositorioHotelMongo(database));          
         // Mostrar pantalla de inicio de sesión
         LoginFrame login = new LoginFrame(autenticacion, hotel);
         login.setVisible(true);
     });
 }
     /** Carga los datos guardados; si no existen (primera ejecución) crea datos de ejemplo. */
-    static Hotel abrirHotel(RepositorioArchivo repositorio) {
+    static Hotel abrirHotel(RepositorioHotel repositorio) {
         Hotel hotel = null;
         try {
             hotel = repositorio.cargar().orElse(null);
         } catch (HotelException e) {
-            respaldarArchivoDanado(repositorio.getArchivo(), e.getMessage());
+             JOptionPane.showMessageDialog(
+            null, e.getMessage(), "Error al cargar",
+            JOptionPane.ERROR_MESSAGE
+    );
         }
         if (hotel == null) {
             hotel = new Hotel("Hotel Pequeño");
