@@ -100,6 +100,9 @@ public class Hotel {
         if (tipo == null) {
             throw new HotelException("Debe seleccionar el tipo de habitación.");
         }
+        if (numero <= 0) {
+    throw new HotelException("El número de habitación debe ser mayor que cero.");
+}
         for (Habitacion h : habitaciones) {
             if (h.getNumero() == numero) {
                 throw new HotelException("La habitación " + numero + " ya está registrada.");

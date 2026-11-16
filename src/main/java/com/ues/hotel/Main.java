@@ -11,6 +11,13 @@ import java.nio.file.StandardCopyOption;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import com.mongodb.client.MongoDatabase;
+import com.ues.hotel.persistencia.ConexionMongo;
+import com.ues.hotel.persistencia.UsuarioRepositorioMongo;
+import com.ues.hotel.seguridad.ServicioAutenticacion;
+import com.ues.hotel.ui.LoginFrame;
+import com.ues.hotel.servicio.RepositorioHotel;
+import com.ues.hotel.persistencia.RepositorioHotelMongo;
 
 /**
  * Punto de entrada de la aplicación de escritorio.
@@ -25,29 +32,57 @@ public class Main {
     private static final Path ARCHIVO_DATOS = Path.of("datos", "hotel.txt");
 
     public static void main(String[] args) {
-        try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
+
+    try {
+        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+            if ("Nimbus".equals(info.getName())) {
+                UIManager.setLookAndFeel(info.getClassName());
+                break;
             }
-        } catch (Exception e) {
-            // Si Nimbus no está disponible se usa el aspecto por defecto.
         }
-        SwingUtilities.invokeLater(() -> {
-            Hotel hotel = abrirHotel(new RepositorioArchivo(ARCHIVO_DATOS));
-            new VentanaPrincipal(hotel).setVisible(true);
-        });
+    } catch (Exception e) {
+        // Si Nimbus no está disponible se usa el aspecto por defecto.
     }
 
+    SwingUtilities.invokeLater(() -> {
+
+        // Obtener conexión con MongoDB
+        MongoDatabase database = ConexionMongo.obtenerInstancia();
+
+        if (database == null) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "No se pudo conectar con MongoDB. Verifique que el servicio esté iniciado.",
+                    "Error de conexión",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        // Crear el repositorio y el servicio de autenticación
+        UsuarioRepositorioMongo repositorioUsuarios =
+                new UsuarioRepositorioMongo(database);
+
+        ServicioAutenticacion autenticacion =
+                new ServicioAutenticacion(repositorioUsuarios);
+
+        // Cargar los datos del hotel
+Hotel hotel = abrirHotel(new RepositorioHotelMongo(database));          
+        // Mostrar pantalla de inicio de sesión
+        LoginFrame login = new LoginFrame(autenticacion, hotel);
+        login.setVisible(true);
+    });
+}
     /** Carga los datos guardados; si no existen (primera ejecución) crea datos de ejemplo. */
-    static Hotel abrirHotel(RepositorioArchivo repositorio) {
+    static Hotel abrirHotel(RepositorioHotel repositorio) {
         Hotel hotel = null;
         try {
             hotel = repositorio.cargar().orElse(null);
         } catch (HotelException e) {
-            respaldarArchivoDanado(repositorio.getArchivo(), e.getMessage());
+             JOptionPane.showMessageDialog(
+            null, e.getMessage(), "Error al cargar",
+            JOptionPane.ERROR_MESSAGE
+    );
         }
         if (hotel == null) {
             hotel = new Hotel("Hotel Pequeño");

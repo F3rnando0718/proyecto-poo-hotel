@@ -19,6 +19,9 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import java.awt.Color;
+import java.awt.Font;
+
 
 /**
  * Consulta de disponibilidad y realización de reservas.
@@ -36,6 +39,9 @@ public class PanelReservar extends JPanel implements Actualizable {
     private final JTextField txtEntrada = new JTextField(LocalDate.now().plusDays(1).format(Ui.FECHA), 9);
     private final JTextField txtSalida = new JTextField(LocalDate.now().plusDays(3).format(Ui.FECHA), 9);
     private final DefaultTableModel modelo = Ui.modelo("Número", "Tipo", "Capacidad", "Tarifa por noche");
+    private final Color Azul = new Color(23, 43, 77);
+    private final Color Gold = new Color(198, 161, 91);
+    private final Color Crema = new Color(244, 241, 234);
     private final JTable tabla = Ui.tabla(modelo);
     private final JComboBox<Cliente> cmbCliente = new JComboBox<>();
     private final List<Habitacion> mostradas = new ArrayList<>();
@@ -46,26 +52,86 @@ public class PanelReservar extends JPanel implements Actualizable {
         this.alCambiar = alCambiar;
         setLayout(new BorderLayout(8, 8));
         setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        setBackground(Crema);
+
+        // Encabezado del panel
+        JPanel encabezado = new JPanel(new BorderLayout());
+        encabezado.setBackground(Azul);
+        encabezado.setBorder(new EmptyBorder(15, 20, 15, 20));
+
+        JLabel titulo = new JLabel("GRAND HOTEL");
+        titulo.setFont(new Font("Serif", Font.BOLD, 24));
+        titulo.setForeground(Color.WHITE);
+
+        JLabel subtitulo = new JLabel("Disponibilidad y reservas");
+        subtitulo.setFont(new Font("Arial", Font.PLAIN, 12));
+        subtitulo.setForeground(Color.WHITE);
+
+        JPanel textos = new JPanel(new java.awt.GridLayout(2, 1));
+        textos.setBackground(Azul);
+        textos.add(titulo);
+        textos.add(subtitulo);
+
+        encabezado.add(textos, BorderLayout.CENTER);
+        
+        
 
         JPanel fechas = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
-        fechas.add(new JLabel("Entrada (dd/mm/aaaa):"));
+        fechas.setBackground(Color.WHITE);
+        fechas.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblEntrada = new JLabel("Entrada (dd/mm/aaaa):");
+        lblEntrada.setForeground(Azul);
+        lblEntrada.setFont(new Font("Arial", Font.BOLD, 13));
+        fechas.add(lblEntrada);
         fechas.add(txtEntrada);
-        fechas.add(new JLabel("Salida (dd/mm/aaaa):"));
+
+        JLabel lblSalida = new JLabel("Salida (dd/mm/aaaa):");
+        lblSalida.setForeground(Azul);
+        lblSalida.setFont(new Font("Arial", Font.BOLD, 13));
+        fechas.add(lblSalida);
         fechas.add(txtSalida);
-        JButton btnBuscar = new JButton("Consultar disponibles");
+
+        txtEntrada.setFont(new Font("Arial", Font.PLAIN, 13));
+        txtSalida.setFont(new Font("Arial", Font.PLAIN, 13));
+        JButton btnBuscar = new JButton("CONSULTAR DISPONIBLES");
+        btnBuscar.setBackground(Azul);
+        btnBuscar.setForeground(Color.WHITE);
+        btnBuscar.setFont(new Font("Arial", Font.BOLD, 12));
+        btnBuscar.setFocusPainted(false);
+        btnBuscar.setBorderPainted(false);
         btnBuscar.addActionListener(e -> buscar(true));
         fechas.add(btnBuscar);
 
+        
+        JPanel contenido = new JPanel(new BorderLayout(8, 8));
+        contenido.setBackground(Crema);
         JPanel reservar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
-        reservar.add(new JLabel("Cliente:"));
+        reservar.setBackground(Color.WHITE);
+        reservar.setBorder(new EmptyBorder(15, 15, 15, 15));
+        reservar.setBackground(Color.WHITE);
+        JLabel lblCliente = new JLabel("Cliente:");
+        lblCliente.setForeground(Azul);
+        lblCliente.setFont(new Font("Arial", Font.BOLD, 13));
+        reservar.add(lblCliente);
+
+        cmbCliente.setFont(new Font("Arial", Font.PLAIN, 13));
         reservar.add(cmbCliente);
-        JButton btnReservar = new JButton("Reservar habitación seleccionada");
+        JButton btnReservar = new JButton("RESERVAR HABITACIÓN");
+        btnReservar.setBackground(Gold);
+        btnReservar.setForeground(Color.WHITE);
+        btnReservar.setFont(new Font("Arial", Font.BOLD, 12));
+        btnReservar.setFocusPainted(false);
+        btnReservar.setBorderPainted(false);
         btnReservar.addActionListener(e -> reservar());
         reservar.add(btnReservar);
 
-        add(fechas, BorderLayout.NORTH);
-        add(new JScrollPane(tabla), BorderLayout.CENTER);
-        add(reservar, BorderLayout.SOUTH);
+        contenido.add(fechas, BorderLayout.NORTH);
+        contenido.add(new JScrollPane(tabla), BorderLayout.CENTER);
+        contenido.add(reservar, BorderLayout.SOUTH);
+
+        add(encabezado, BorderLayout.NORTH);
+        add(contenido, BorderLayout.CENTER);
         actualizar();
     }
 
@@ -98,9 +164,15 @@ public class PanelReservar extends JPanel implements Actualizable {
             if (cliente == null) {
                 throw new HotelException("Debe registrar al menos un cliente antes de reservar.");
             }
+             if (!hayBusqueda) {
+            throw new HotelException("Primero consulte la disponibilidad.");
+}
+
+
+        Habitacion habitacion = mostradas.get(fila);
             LocalDate entrada = Ui.leerFecha(txtEntrada.getText(), "entrada");
             LocalDate salida = Ui.leerFecha(txtSalida.getText(), "salida");
-            Habitacion habitacion = mostradas.get(fila);
+           
             Reserva reserva = hotel.realizarReserva(cliente.getId(), habitacion.getNumero(), entrada, salida);
             Ui.info(this, "Reserva #" + reserva.getId() + " creada para " + cliente.getNombre() + ".\n"
                     + habitacion + " | " + reserva.getNoches() + " noche(s)\n"

@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
+import java.awt.Color;
+import java.awt.Font;
+import javax.swing.UIManager;
 
 /**
  * Ventana principal: una pestaña por cada función del caso de estudio.
@@ -35,16 +38,24 @@ public class VentanaPrincipal extends JFrame {
         paneles.add(reservas);
 
         JTabbedPane pestanas = new JTabbedPane();
+        pestanas.setFont(new Font("Arial", Font.BOLD, 13));
+        pestanas.setBackground(new Color(23, 43, 77));
+        pestanas.setForeground(Color.WHITE);
+        pestanas.setTabPlacement(JTabbedPane.TOP);
+        pestanas.setOpaque(true);
+        pestanas.setBackground(new Color(23, 43, 77));
         pestanas.addTab("Clientes", clientes);
         pestanas.addTab("Habitaciones", habitaciones);
         pestanas.addTab("Disponibilidad y reserva", reservar);
         pestanas.addTab("Reservas y costo", reservas);
-        pestanas.addTab("Comparación de enfoques", new PanelComparacion());
+        
         add(pestanas);
+        pestanas.addChangeListener(e -> refrescarTodo());
 
         setMinimumSize(new Dimension(900, 520));
         setSize(1050, 620);
         setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
     private void refrescarTodo() {
