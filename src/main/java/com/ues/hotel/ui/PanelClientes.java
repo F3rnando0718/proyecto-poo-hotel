@@ -62,7 +62,7 @@ public class PanelClientes extends JPanel implements Actualizable {
         subtitulo.setFont(new Font("Arial", Font.PLAIN, 12));
         subtitulo.setForeground(Color.WHITE);
         
-        JPanel textos = new JPanel(new GridLayout(2, 1));
+        JPanel textos = new JPanel(new java.awt.GridLayout(2, 1));
         textos.setBackground(Azul);
         textos.add(titulo);
         textos.add(subtitulo);
@@ -70,9 +70,11 @@ public class PanelClientes extends JPanel implements Actualizable {
         encabezado.add(textos, BorderLayout.CENTER);
         
 
-        
-        JPanel formulario = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        JPanel contenido = new JPanel(new BorderLayout(8, 8));
+        contenido.setBackground(Crema);
+        JPanel formulario = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 12));
         formulario.setBackground(Color.WHITE);
+        formulario.setBorder(new EmptyBorder(20, 15, 20, 15));
         formulario.setBorder(new EmptyBorder(15, 15, 15, 15));
         JLabel lblNombre = new JLabel("Nombre:");
         lblNombre.setForeground(Azul);
@@ -99,7 +101,7 @@ public class PanelClientes extends JPanel implements Actualizable {
         txtDui.setFont(new Font("Arial", Font.PLAIN, 13));
         txtTelefono.setFont(new Font("Arial", Font.PLAIN, 13));
         txtCorreo.setFont(new Font("Arial", Font.PLAIN, 13));
-        
+        txtBuscar.setFont(new Font("Arial", Font.PLAIN, 13));
 
         JButton btnRegistrar = new JButton("REGISTRAR CLIENTE");
         btnRegistrar.setBackground(Gold);
@@ -126,21 +128,25 @@ public class PanelClientes extends JPanel implements Actualizable {
         formulario.add(btnBuscar);
         
         JButton btnMostrarTodos = new JButton("MOSTRAR TODOS");
-    btnMostrarTodos.setBackground(Gold);
-    btnMostrarTodos.setForeground(Color.WHITE);
-    btnMostrarTodos.setFont(new Font("Arial", Font.BOLD, 12));
-    btnMostrarTodos.setFocusPainted(false);
-    btnMostrarTodos.setBorderPainted(false);
+        btnMostrarTodos.setBackground(Gold);
+        btnMostrarTodos.setForeground(Color.WHITE);
+        btnMostrarTodos.setFont(new Font("Arial", Font.BOLD, 12));
+        btnMostrarTodos.setFocusPainted(false);
+        btnMostrarTodos.setBorderPainted(false);
+
         btnMostrarTodos.addActionListener(e -> {
     txtBuscar.setText("");
     actualizar();
-            });
+});
+
         formulario.add(btnMostrarTodos);
         
 
+        contenido.add(formulario, BorderLayout.NORTH);
+        contenido.add(new JScrollPane(Ui.tabla(modelo)), BorderLayout.CENTER);
+
         add(encabezado, BorderLayout.NORTH);
-        add(formulario, BorderLayout.CENTER);
-        add(new JScrollPane(Ui.tabla(modelo)), BorderLayout.SOUTH);
+        add(contenido, BorderLayout.CENTER);
         actualizar();
     }
 
