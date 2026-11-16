@@ -128,6 +128,16 @@ encabezado.setBorder(new EmptyBorder(15, 20, 15, 20));
     private void cancelar() {
         try {
             Reserva r = seleccionada();
+            int confirmar = javax.swing.JOptionPane.showConfirmDialog(
+        this,
+        "¿Está seguro de cancelar la reserva #" + r.getId() + "?",
+        "Confirmar cancelación",
+        javax.swing.JOptionPane.YES_NO_OPTION
+);
+
+        if (confirmar != javax.swing.JOptionPane.YES_OPTION) {
+        return;
+}
             hotel.cancelarReserva(r.getId());
             Ui.info(this, "La reserva #" + r.getId() + " fue cancelada.");
             alCambiar.run();
